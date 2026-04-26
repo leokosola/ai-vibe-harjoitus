@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Code written by Anthropic Claude Sonnet 4.6. Prompts by Leo Kosola. This is an exercise on vibe coding for the Haaga-Helia course.
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Which Country? — European Flag Quiz</title>
+  <meta name="description" content="Test your knowledge of European flags. Guess the country from its flag, with optional hints!" />
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #f7f6f2;
+      --surface:      #ffffff;
+      --border:       #e2e0d8;
+      --border-light: #edebe4;
+      --text:         #1a1917;
+      --text-muted:   #6b6860;
+      --text-faint:   #9e9c96;
+      --accent:       #1a1917;
+      --radius-sm:    6px;
+      --radius-md:    10px;
+      --radius-lg:    14px;
+      --correct-bg:   #eaf3de;
+      --correct-text: #2d5a0e;
+      --correct-border:#b4d97a;
+      --wrong-bg:     #fceaea;
+      --wrong-text:   #8b1f1f;
+      --wrong-border: #f0a0a0;
+      --info-bg:      #e8f0fb;
+      --info-text:    #1a3d7a;
+      --info-border:  #a8c0f0;
+      --hint-bg:      #fdf8ee;
+      --hint-text:    #5a4200;
+      --hint-border:  #e8d48a;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:           #18171a;
+        --surface:      #222128;
+        --border:       #38363f;
+        --border-light: #2e2c35;
+        --text:         #f0eee8;
+        --text-muted:   #9e9b98;
+        --text-faint:   #6b6968;
+        --accent:       #f0eee8;
+        --correct-bg:   #1a2e0a;
+        --correct-text: #8ecf50;
+        --correct-border:#3a6018;
+        --wrong-bg:     #2e0e0e;
+        --wrong-text:   #f09090;
+        --wrong-border: #7a2020;
+        --info-bg:      #0e1a32;
+        --info-text:    #7aabf0;
+        --info-border:  #1e3a70;
+        --hint-bg:      #221a00;
+        --hint-text:    #d4aa40;
+        --hint-border:  #5a4200;
+      }
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────── */
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 2.5rem;
+    }
+
+    .logo {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .main {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* ── Score bar ────────────────────────────────────────────── */
+    .score-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      align-items: center;
+    }
+
+    .score-item {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .score-item strong {
+      font-weight: 600;
+      color: var(--text);
+      margin-left: 3px;
+    }
+
+    /* ── Progress bar ─────────────────────────────────────────── */
+    .progress-wrap { margin-bottom: 1.75rem; }
+
+    .progress-track {
+      height: 3px;
+      background: var(--border-light);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--text);
+      border-radius: 99px;
+      transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Question heading ─────────────────────────────────────── */
+    .question-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 0.3rem;
+    }
+
+    .question-heading {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+      line-height: 1.2;
+    }
+
+    /* ── Flag card ────────────────────────────────────────────── */
+    .flag-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.5rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    .flag-card img {
+      max-width: 100%;
+      max-height: 170px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border: 1px solid var(--border-light);
+      border-radius: 3px;
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .flag-error {
+      font-size: 13px;
+      color: var(--text-faint);
+      text-align: center;
+    }
+
+    /* ── Hint box ─────────────────────────────────────────────── */
+    .hint-box {
+      background: var(--hint-bg);
+      border: 1px solid var(--hint-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .hint-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--hint-text);
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .hint-text {
+      font-size: 14px;
+      color: var(--hint-text);
+      line-height: 1.6;
+    }
+
+    .hint-box.loading .hint-text {
+      opacity: 0.5;
+      font-style: italic;
+    }
+
+    /* ── Feedback ─────────────────────────────────────────────── */
+    .feedback {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+      font-size: 14px;
+      font-weight: 600;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .feedback.correct {
+      background: var(--correct-bg);
+      color: var(--correct-text);
+      border: 1px solid var(--correct-border);
+    }
+
+    .feedback.wrong {
+      background: var(--wrong-bg);
+      color: var(--wrong-text);
+      border: 1px solid var(--wrong-border);
+    }
+
+    .feedback.revealed {
+      background: var(--info-bg);
+      color: var(--info-text);
+      border: 1px solid var(--info-border);
+    }
+
+    /* ── Input row ────────────────────────────────────────────── */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0.75rem;
+    }
+
+    .flag-input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .flag-input:focus {
+      border-color: var(--text);
+      box-shadow: 0 0 0 3px rgba(26,25,23,0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .flag-input:focus { box-shadow: 0 0 0 3px rgba(240,238,232,0.1); }
+    }
+
+    .flag-input:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.12s, opacity 0.12s, transform 0.1s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .btn:hover:not(:disabled) { background: var(--bg); }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
+
+    .btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: transparent;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent);
+      opacity: 0.85;
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    /* ── Action row ───────────────────────────────────────────── */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ── Done screen ──────────────────────────────────────────── */
+    .done-card {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+    }
+
+    .done-icon {
+      font-size: 52px;
+      margin-bottom: 1rem;
+      line-height: 1;
+    }
+
+    .done-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .done-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .done-stats {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .done-stat .val {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .done-stat .lbl {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .done-stat.correct-stat .val { color: var(--correct-text); }
+    .done-stat.wrong-stat .val   { color: var(--wrong-text); }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .question-heading { font-size: 22px; }
+      .flag-card { padding: 1.5rem 1rem; min-height: 160px; }
+      .flag-card img { max-height: 140px; }
+      .done-stats { gap: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <span class="logo">Flag Quiz · Europe</span>
+  </header>
+  <main class="main" id="app" role="main" aria-live="polite"></main>
+</div>
+
+<script>
+/* ── Country data with hints ──────────────────────────────────── */
+const COUNTRIES = [
+  { name: "Albania", code: "al", hints: [
+    "This country's name in its own language is 'Shqipëri', meaning 'Land of the Eagles'.",
+    "It shares borders with Greece, North Macedonia, Kosovo, and Montenegro.",
+    "The national hero Gjergj Kastrioti, known as Skanderbeg, is celebrated here.",
+    "Lake Ohrid, one of Europe's oldest lakes, sits on its eastern border.",
+    "Its capital city lies along the Ishëm and Erzen rivers."
+  ]},
+  { name: "Andorra", code: "ad", hints: [
+    "This is one of the smallest countries in Europe by area.",
+    "It is a co-principality jointly governed by two heads of state from different countries.",
+    "The country has no airport of its own.",
+    "It is entirely landlocked within the Pyrenees mountains between France and Spain.",
+    "It has one of the highest life expectancy rates in the world."
+  ]},
+  { name: "Austria", code: "at", hints: [
+    "This country was once the heart of a vast Central European empire.",
+    "Its capital is famous for its classical music heritage and grand opera houses.",
+    "It borders eight different countries — more than almost any other in Europe.",
+    "The Alps cover a large portion of its territory.",
+    "Famous composers Mozart and Schubert were both born here."
+  ]},
+  { name: "Belarus", code: "by", hints: [
+    "This country is sometimes called 'the lungs of Europe' for its vast forests.",
+    "It is landlocked and borders Russia to the east and north.",
+    "It was one of the founding republics of the Soviet Union.",
+    "The country has preserved many Soviet-era monuments and architectural styles.",
+    "Its capital's name loosely translates to 'high ground' in the local language."
+  ]},
+  { name: "Belgium", code: "be", hints: [
+    "This small country has three official languages: French, Dutch, and German.",
+    "It hosts the headquarters of both NATO and the European Union.",
+    "It is world-famous for its chocolate, waffles, and vast variety of beers.",
+    "Its capital is often nicknamed the 'capital of Europe'.",
+    "The Battle of Waterloo, which ended Napoleon's rule, was fought here in 1815."
+  ]},
+  { name: "Bosnia and Herzegovina", code: "ba", hints: [
+    "Its name refers to two distinct historical regions that make up the country.",
+    "It has a very short Adriatic coastline of only about 20 kilometres.",
+    "The city of Mostar is famous for its iconic 16th-century stone bridge.",
+    "It hosted the 1984 Winter Olympic Games.",
+    "The assassination that triggered World War I took place in its capital in 1914."
+  ]},
+  { name: "Bulgaria", code: "bg", hints: [
+    "This country uses the Cyrillic alphabet.",
+    "It sits on the Balkan Peninsula and has a coastline on the Black Sea.",
+    "It is one of the oldest states in Europe, founded in 681 AD.",
+    "It is among the world's largest producers of rose oil, used in perfumery.",
+    "The ancient city of Plovdiv is one of Europe's oldest continuously inhabited cities."
+  ]},
+  { name: "Croatia", code: "hr", hints: [
+    "This country has over a thousand islands dotting its coastline.",
+    "The necktie is widely said to have originated from soldiers of this nation.",
+    "Dubrovnik, a famous walled city here, is sometimes called the 'Pearl of the Adriatic'.",
+    "It borders the Adriatic Sea to its west.",
+    "It became an EU member in 2013, the most recent country to join at that time."
+  ]},
+  { name: "Cyprus", code: "cy", hints: [
+    "This island nation lies in the eastern Mediterranean Sea.",
+    "It is divided into two parts, separated by a UN buffer zone running through its capital.",
+    "The name of the metal copper derives from this country's Latin name.",
+    "Its capital is the world's last remaining divided capital city.",
+    "According to Greek mythology, the goddess Aphrodite was born on this island."
+  ]},
+  { name: "Czech Republic", code: "cz", hints: [
+    "This landlocked country is also officially known by the one-word name 'Czechia'.",
+    "Its capital is famous for its intact medieval old town and famous astronomical clock.",
+    "It is the birthplace of the Pilsner style of beer.",
+    "It borders Germany, Poland, Slovakia, and Austria.",
+    "Franz Kafka was born and lived most of his life in its capital."
+  ]},
+  { name: "Denmark", code: "dk", hints: [
+    "This country is the southernmost of the Nordic nations.",
+    "It includes a large autonomous territory in the North Atlantic.",
+    "Its flag is considered the oldest national flag still in continuous use worldwide.",
+    "The beloved fairy tale author Hans Christian Andersen was born here.",
+    "It consists of a peninsula and more than 400 islands."
+  ]},
+  { name: "Estonia", code: "ee", hints: [
+    "This Baltic nation is widely regarded as one of the most digitally advanced countries in the world.",
+    "It borders Russia to the east and Latvia to the south.",
+    "The voice-calling service Skype was originally founded here.",
+    "It has over 2,000 islands scattered in the Baltic Sea.",
+    "It was one of the first countries to offer e-residency to foreign nationals."
+  ]},
+  { name: "Finland", code: "fi", hints: [
+    "This country has more saunas than cars.",
+    "It borders Russia, Norway, and Sweden.",
+    "It is known as the 'Land of a Thousand Lakes', though the actual count exceeds 180,000.",
+    "Santa Claus's official hometown is traditionally said to be located here.",
+    "It consistently ranks among the world's happiest countries."
+  ]},
+  { name: "France", code: "fr", hints: [
+    "This country is the largest by area in the European Union.",
+    "Its iconic iron tower in the capital was originally intended to be a temporary structure.",
+    "It is the most visited country in the world by international tourists.",
+    "It produces more named varieties of cheese than almost any other nation.",
+    "The word 'restaurant' entered global usage from this country's language."
+  ]},
+  { name: "Germany", code: "de", hints: [
+    "This country has the largest economy in Europe.",
+    "It is famous for its Oktoberfest beer festival, held annually in Bavaria.",
+    "The Berlin Wall, which once divided its capital, fell in 1989.",
+    "It borders nine different countries — more than any other European nation.",
+    "The printing press with movable type was invented here by Johannes Gutenberg."
+  ]},
+  { name: "Greece", code: "gr", hints: [
+    "This country is considered the birthplace of democracy and the Olympic Games.",
+    "It has the longest coastline of any country in the Mediterranean Sea.",
+    "It consists of a mainland and nearly 6,000 islands, about 230 of which are inhabited.",
+    "The Parthenon, one of the world's most recognisable ancient structures, stands in its capital.",
+    "Its alphabet is the ancestor of both the Latin and Cyrillic scripts."
+  ]},
+  { name: "Hungary", code: "hu", hints: [
+    "This landlocked country sits in the Carpathian Basin in Central Europe.",
+    "Its capital is actually two historic cities joined across a major river.",
+    "It is renowned for its thermal baths, fed by hundreds of natural hot springs.",
+    "The Rubik's Cube was invented by a Hungarian professor.",
+    "Its language belongs to the Uralic family and is unrelated to most other European languages."
+  ]},
+  { name: "Iceland", code: "is", hints: [
+    "This island nation straddles the Mid-Atlantic Ridge between two tectonic plates.",
+    "It has no mosquitoes and no native reptile species.",
+    "It is the most sparsely populated country in Europe.",
+    "Despite its name, it is considerably greener than its large neighbour to the west.",
+    "The Althing, one of the world's oldest parliaments, was founded here in 930 AD."
+  ]},
+  { name: "Ireland", code: "ie", hints: [
+    "This island nation is nicknamed the 'Emerald Isle' for its lush, rain-fed landscape.",
+    "It is the only country in the world to use the harp as its national symbol.",
+    "Halloween is thought to have evolved from an ancient Celtic festival that originated here.",
+    "Its capital is home to the world-famous Guinness brewery.",
+    "It is the only English-speaking member of the Eurozone."
+  ]},
+  { name: "Italy", code: "it", hints: [
+    "This country is shaped like a boot and extends into the Mediterranean Sea.",
+    "It contains two independent microstates entirely within its borders.",
+    "It has more UNESCO World Heritage Sites than any other country.",
+    "The Roman Empire, which once dominated much of the known world, originated here.",
+    "Pizza and pasta are among the most globally recognised exports of its cuisine."
+  ]},
+  { name: "Kosovo", code: "xk", hints: [
+    "This is one of the newest and most disputed countries in Europe, declaring independence in 2008.",
+    "It is landlocked and surrounded by Serbia, North Macedonia, Albania, and Montenegro.",
+    "It is one of the smallest countries in Europe by area.",
+    "Its capital shares its name with a pivotal medieval battle fought in 1389.",
+    "It is not a full UN member due to ongoing international recognition disputes."
+  ]},
+  { name: "Latvia", code: "lv", hints: [
+    "This Baltic country is celebrated for its outstanding art nouveau architecture in its capital.",
+    "Its national flag is one of the oldest in the world, with designs traceable to the 13th century.",
+    "It borders Estonia, Lithuania, Russia, and Belarus.",
+    "Its capital has been nicknamed the 'Paris of the North'.",
+    "It has a sizeable Russian-speaking minority population."
+  ]},
+  { name: "Liechtenstein", code: "li", hints: [
+    "This tiny country is one of only two doubly landlocked countries in the world.",
+    "It abolished its military permanently in 1868 and has maintained no army since.",
+    "It borders only Switzerland and Austria.",
+    "Despite its tiny size, it ranks among the wealthiest countries in the world per capita.",
+    "It is the sixth smallest country in the world by area."
+  ]},
+  { name: "Lithuania", code: "lt", hints: [
+    "In the 14th century, this Baltic nation formed the largest country in Europe.",
+    "Its capital's old town is a UNESCO World Heritage Site.",
+    "It is the southernmost of the three Baltic states.",
+    "Basketball is enormously popular here — almost a second national religion.",
+    "It was the first Soviet republic to declare independence, doing so in 1990."
+  ]},
+  { name: "Luxembourg", code: "lu", hints: [
+    "This tiny country has three official languages: French, German, and Luxembourgish.",
+    "It is one of the six founding members of what became the European Union.",
+    "It is the world's only remaining Grand Duchy.",
+    "It has the highest GDP per capita in the European Union.",
+    "It borders France, Germany, and Belgium."
+  ]},
+  { name: "Malta", code: "mt", hints: [
+    "This island nation is the smallest and most densely populated country in the EU.",
+    "It lies in the Mediterranean Sea, directly south of Sicily.",
+    "The Knights of St. John ruled this island for over 250 years during the medieval era.",
+    "Its megalithic temples predate Stonehenge and are among the oldest free-standing structures on Earth.",
+    "It has two official languages: Maltese and English."
+  ]},
+  { name: "Moldova", code: "md", hints: [
+    "This landlocked country is frequently cited as the poorest in Europe.",
+    "It borders only Romania and Ukraine.",
+    "It has a separatist region along the Dniester River that is not internationally recognised.",
+    "It is known for its extensive wine production and vast underground wine cellars.",
+    "Its flag coat of arms features an eagle holding an ox head shield."
+  ]},
+  { name: "Monaco", code: "mc", hints: [
+    "This city-state is the second smallest country in the world by area.",
+    "Its Formula One Grand Prix is held on public streets winding through the principality.",
+    "It has the highest concentration of millionaires and billionaires per capita in the world.",
+    "It is surrounded by France on land, with a short coastline on the Mediterranean Sea.",
+    "The ruling Grimaldi family has governed here for over 700 years."
+  ]},
+  { name: "Montenegro", code: "me", hints: [
+    "Its name literally means 'Black Mountain' in the local language.",
+    "It became an independent country in 2006, one of Europe's newest nations.",
+    "It has both a short Adriatic coastline and dramatic mountainous inland terrain.",
+    "It borders Croatia, Bosnia and Herzegovina, Serbia, Kosovo, and Albania.",
+    "Its Bay of Kotor is widely considered one of the most beautiful natural harbours in Europe."
+  ]},
+  { name: "Netherlands", code: "nl", hints: [
+    "Around a third of this country's total land area lies below sea level.",
+    "It is the world's second largest exporter of food and agricultural products, after the United States.",
+    "Its capital is internationally famous for its canal rings and cycling culture.",
+    "It is home to the International Court of Justice in The Hague.",
+    "The royal family's surname gave rise to the orange colour strongly associated with its sports teams."
+  ]},
+  { name: "North Macedonia", code: "mk", hints: [
+    "This landlocked country formally changed its name in 2019 to resolve a long-running dispute.",
+    "Alexander the Great is claimed as a historical figure by both this country and its southern neighbour.",
+    "It borders Serbia, Kosovo, Bulgaria, Greece, and Albania.",
+    "Its capital sits along the Vardar River.",
+    "It joined NATO in 2020, becoming one of the alliance's newest members."
+  ]},
+  { name: "Norway", code: "no", hints: [
+    "This country has one of the world's longest coastlines, dramatically sculpted by fjords.",
+    "It consistently ranks among the top countries globally for quality of life and happiness.",
+    "It is one of the world's leading exporters of oil and natural gas.",
+    "The Nobel Peace Prize ceremony is held in its capital; the other Nobel Prizes are awarded in Sweden.",
+    "It borders Sweden, Finland, and Russia."
+  ]},
+  { name: "Poland", code: "pl", hints: [
+    "This is the largest country in Central Europe by area.",
+    "Its capital was almost entirely destroyed in World War II and was painstakingly rebuilt brick by brick.",
+    "It is famous for pierogi, a beloved national dish of stuffed dumplings.",
+    "It borders seven countries, including Germany, Russia's Kaliningrad exclave, and Ukraine.",
+    "Nicolaus Copernicus, who proposed the heliocentric model of the solar system, was born here."
+  ]},
+  { name: "Portugal", code: "pt", hints: [
+    "This country occupies the westernmost point of mainland Europe.",
+    "It built one of history's most extensive global empires during the Age of Exploration.",
+    "Its language is an official language of nine countries across four continents.",
+    "It is famous for fado, a melancholic and soulful style of folk music.",
+    "On the Iberian Peninsula, it shares a land border with only one other country."
+  ]},
+  { name: "Romania", code: "ro", hints: [
+    "The region of Transylvania, closely associated with the Dracula legend, is located here.",
+    "It borders the Black Sea to the southeast.",
+    "Its capital was once nicknamed the 'Little Paris' for its Belle Époque architecture.",
+    "It is the largest country in the Balkans by population.",
+    "The Danube Delta, one of Europe's largest and best-preserved wetlands, is found here."
+  ]},
+  { name: "Russia", code: "ru", hints: [
+    "This is the largest country in the world by land area, spanning eleven time zones.",
+    "It contains Lake Baikal, which is the world's deepest and oldest freshwater lake.",
+    "The Trans-Siberian Railway, the longest in the world, crosses this country from west to east.",
+    "It borders fourteen countries — more than any other nation on Earth.",
+    "The Hermitage Museum in its second-largest city is one of the largest art museums in the world."
+  ]},
+  { name: "San Marino", code: "sm", hints: [
+    "This country claims to be the world's oldest republic, founded in 301 AD.",
+    "It is entirely surrounded by Italy.",
+    "It is the fifth smallest country in the world by area.",
+    "Mount Titano, a UNESCO World Heritage Site, towers dramatically over its landscape.",
+    "Despite its tiny size, it fields its own national football team in international competition."
+  ]},
+  { name: "Serbia", code: "rs", hints: [
+    "This landlocked country lies in the heart of the Balkans.",
+    "Its capital sits at the confluence of the Sava and Danube rivers.",
+    "Nikola Tesla, the pioneering inventor and electrical engineer, was born here.",
+    "It was once the dominant republic within the largest federation in the western Balkans.",
+    "It is one of the world's leading producers of raspberries."
+  ]},
+  { name: "Slovakia", code: "sk", hints: [
+    "This landlocked country separated peacefully from its neighbour in 1993 in the 'Velvet Divorce'.",
+    "It has one of the highest densities of castles per square kilometre in the world.",
+    "It borders Austria, Czech Republic, Poland, Ukraine, and Hungary.",
+    "Its capital is the only national capital in the world that directly borders two other countries.",
+    "It is home to the High Tatras, the smallest alpine mountain range in the world."
+  ]},
+  { name: "Slovenia", code: "si", hints: [
+    "This small country is one of the greenest in Europe, with over 60% of its land covered by forest.",
+    "It borders Italy, Austria, Hungary, and Croatia.",
+    "It has a very short Adriatic coastline of only about 47 kilometres.",
+    "According to local legend, its capital is named after a dragon.",
+    "It was the first former Yugoslav republic to join the European Union."
+  ]},
+  { name: "Spain", code: "es", hints: [
+    "This country has the second largest land area in the European Union.",
+    "One of its Atlantic island territories contains an active volcano.",
+    "It shares the Iberian Peninsula with Portugal.",
+    "The running of the bulls festival, known as San Fermín, takes place in its northern city of Pamplona.",
+    "It maintains two autonomous cities located on the African continent."
+  ]},
+  { name: "Sweden", code: "se", hints: [
+    "This country is the largest in Scandinavia by both area and population.",
+    "It has maintained a policy of non-participation in wars for over 200 years.",
+    "Both IKEA and Spotify were founded here.",
+    "It has around 270,000 islands along its coastline.",
+    "The Nobel Prizes — except the Peace Prize — are awarded in its capital each December."
+  ]},
+  { name: "Switzerland", code: "ch", hints: [
+    "This country has four official languages: German, French, Italian, and Romansh.",
+    "It has not been involved in an international armed conflict since 1815.",
+    "It is the birthplace of the Red Cross, which uses an inverted version of its flag as its symbol.",
+    "It is one of only two countries in the world with a square national flag.",
+    "It is globally renowned for banking, precision watchmaking, chocolate, and cheese."
+  ]},
+  { name: "Ukraine", code: "ua", hints: [
+    "This is the largest country located entirely within Europe.",
+    "It is often called the 'breadbasket of Europe' for its vast, fertile agricultural plains.",
+    "It borders Russia, Belarus, Poland, Slovakia, Hungary, Romania, and Moldova.",
+    "The Chernobyl nuclear disaster of 1986 occurred in the north of this country.",
+    "Its capital is one of the oldest cities in Eastern Europe, with roots in the 5th century AD."
+  ]},
+  { name: "United Kingdom", code: "gb", hints: [
+    "This country is made up of four constituent nations.",
+    "It drives on the left side of the road — one of very few European countries to do so.",
+    "The inventor of the World Wide Web was a citizen of this country.",
+    "It is separated from mainland Europe by the English Channel.",
+    "It left the European Union in 2020 in a process widely referred to as 'Brexit'."
+  ]},
+  { name: "Vatican City", code: "va", hints: [
+    "This is the smallest country in the world by both area and population.",
+    "It is an independent city-state located entirely within the city of Rome.",
+    "It is the global headquarters of the Roman Catholic Church.",
+    "Its leader is elected for life by a council of senior Catholic clergy.",
+    "It issues its own euro coins, postage stamps, and has its own newspaper and radio station."
+  ]},
+];
+
+/* ── Answer aliases ───────────────────────────────────────────── */
+const ALIASES = {
+  "czech republic":           ["czechia", "czech"],
+  "united kingdom":           ["uk", "great britain", "britain", "england"],
+  "netherlands":              ["holland"],
+  "north macedonia":          ["macedonia"],
+  "bosnia and herzegovina":   ["bosnia", "bosnia-herzegovina", "bosnia herzegovina"],
+  "vatican city":             ["vatican", "holy see"],
+  "russia":                   ["russian federation"],
+  "germany":                  ["deutschland"],
+  "greece":                   ["hellas"],
+};
+
+/* ── Helpers ──────────────────────────────────────────────────── */
+function flagUrl(code) {
+  return "https://flagcdn.com/w320/" + code + ".png";
+}
+
+// Strips diacritics, punctuation, and normalises whitespace for comparison
+function normalize(s) {
+  return s.trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function isCorrect(input, countryName) {
+  const inp    = normalize(input);
+  const target = normalize(countryName);
+  if (inp === target) return true;
+  return (ALIASES[target] || []).some(a => inp === normalize(a));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Prevents XSS when interpolating user input into HTML attributes
+function escapeAttr(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/* ── State ────────────────────────────────────────────────────── */
+function freshState() {
+  return {
+    queue:           shuffle(COUNTRIES),
+    current:         0,
+    score:           0,
+    wrong:           0,
+    // Phases: "answering" | "correct" | "wrong" | "revealed" | "done"
+    phase:           "answering",
+    inputVal:        "",
+    hint:            null,
+    hintLoading:     false,
+    usedHintIndices: [],
+  };
+}
+
+let state = freshState();
+
+/* ── Actions ──────────────────────────────────────────────────── */
+function submitAnswer() {
+  const inp = document.getElementById("answer-input");
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) { inp.focus(); return; }
+  state.inputVal = val;
+  if (isCorrect(val, state.queue[state.current].name)) {
+    state.score++;
+    state.phase = "correct";
+  } else {
+    state.wrong++;
+    state.phase = "wrong";
+  }
+  render();
+}
+
+function revealAnswer() {
+  state.phase = "revealed";
+  render();
+}
+
+function nextFlag() {
+  state.current++;
+  state.inputVal        = "";
+  state.hint            = null;
+  state.hintLoading     = false;
+  state.usedHintIndices = [];
+  state.phase = state.current >= state.queue.length ? "done" : "answering";
+  render();
+}
+
+function restart() {
+  state = freshState();
+  render();
+}
+
+async function fetchHint() {
+  const country = state.queue[state.current];
+  const unusedIndices = country.hints
+    .map((_, i) => i)
+    .filter(i => !state.usedHintIndices.includes(i));
+
+  if (unusedIndices.length === 0) {
+    state.hint = "No more hints available for this flag!";
+    render();
+    return;
+  }
+
+  state.hintLoading = true;
+  render();
+
+  // Brief delay so the "loading" state is visible and feels responsive
+  await new Promise(r => setTimeout(r, 350));
+
+  const pick = unusedIndices[Math.floor(Math.random() * unusedIndices.length)];
+  state.usedHintIndices.push(pick);
+  state.hint        = country.hints[pick];
+  state.hintLoading = false;
+  render();
+}
+
+/* ── Image error handler ─────────────────────────────────────── */
+function handleImgError(img) {
+  // Try the 2x resolution as a fallback before giving up
+  if (!img.dataset.fallback) {
+    img.dataset.fallback = "1";
+    img.src = img.src.replace("/w320/", "/w640/");
+    return;
+  }
+  // Both sizes failed — show a graceful message
+  const card = img.closest(".flag-card");
+  if (card) card.innerHTML = '<p class="flag-error">Flag image could not be loaded.</p>';
+}
+
+/* ── Render ───────────────────────────────────────────────────── */
+function render() {
+  const app   = document.getElementById("app");
+  const total = state.queue.length;
+  const idx   = state.current;
+
+  /* ── Done screen ── */
+  if (state.phase === "done") {
+    const pct  = Math.round(state.score / total * 100);
+    const icon = pct === 100 ? "🎉" : pct >= 70 ? "👏" : "📚";
+    app.innerHTML = `
+      <div class="done-card">
+        <div class="done-icon" aria-hidden="true">${icon}</div>
+        <h1 class="done-title">Quiz complete!</h1>
+        <p class="done-sub">You went through all ${total} European flags.</p>
+        <div class="done-stats">
+          <div class="done-stat correct-stat">
+            <div class="val">${state.score}</div>
+            <div class="lbl">Correct</div>
+          </div>
+          <div class="done-stat wrong-stat">
+            <div class="val">${state.wrong}</div>
+            <div class="lbl">Wrong</div>
+          </div>
+          <div class="done-stat">
+            <div class="val">${pct}%</div>
+            <div class="lbl">Accuracy</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="restart()">Play again</button>
+      </div>`;
+    return;
+  }
+
+  /* ── Quiz screen ── */
+  const country  = state.queue[idx];
+  const pct      = Math.round(idx / total * 100);
+  const answered = state.phase === "correct" || state.phase === "revealed";
+  const hintsLeft = country.hints.length - state.usedHintIndices.length;
+  const canHint  = !answered && !state.hintLoading && hintsLeft > 0;
+
+  // Feedback message
+  let feedbackHtml = "";
+  if (state.phase === "correct") {
+    feedbackHtml = `<div class="feedback correct" role="alert">Correct! It's ${country.name}.</div>`;
+  } else if (state.phase === "wrong") {
+    feedbackHtml = `<div class="feedback wrong" role="alert">Not quite — try again or use the options below.</div>`;
+  } else if (state.phase === "revealed") {
+    feedbackHtml = `<div class="feedback revealed" role="alert">The answer is: <strong>${country.name}</strong></div>`;
+  }
+
+  // Hint display
+  let hintHtml = "";
+  if (state.hintLoading) {
+    hintHtml = `<div class="hint-box loading"><div class="hint-label">Hint</div><div class="hint-text">Finding a hint…</div></div>`;
+  } else if (state.hint) {
+    hintHtml = `<div class="hint-box"><div class="hint-label">Hint</div><div class="hint-text">${state.hint}</div></div>`;
+  }
+
+  // Hint button label — communicates remaining hints clearly
+  let hintLabel;
+  if (state.hintLoading)                hintLabel = "Loading…";
+  else if (hintsLeft === 0)             hintLabel = "No hints left";
+  else if (state.usedHintIndices.length > 0) hintLabel = `Another hint (${hintsLeft} left)`;
+  else                                  hintLabel = `Give me a hint (${hintsLeft})`;
+
+  // Secondary action buttons depend on phase
+  let secondaryActions = "";
+  if (state.phase === "wrong") {
+    secondaryActions = `
+      <button class="btn btn-sm" onclick="revealAnswer()">Show answer</button>
+      <button class="btn btn-primary btn-sm" onclick="nextFlag()">Skip →</button>`;
+  } else if (answered) {
+    secondaryActions = `<button class="btn btn-primary" onclick="nextFlag()">Next flag →</button>`;
+  }
+
+  app.innerHTML = `
+    <div class="score-bar">
+      <div class="score-item">Flag <strong>${idx + 1} / ${total}</strong></div>
+      <div class="score-item">Correct <strong>${state.score}</strong></div>
+      <div class="score-item">Wrong <strong>${state.wrong}</strong></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-track"
+           role="progressbar"
+           aria-valuenow="${pct}"
+           aria-valuemin="0"
+           aria-valuemax="100"
+           aria-label="Quiz progress">
+        <div class="progress-fill" style="width: ${pct}%"></div>
+      </div>
+    </div>
+
+    <p class="question-label">Flag quiz · Europe</p>
+    <h1 class="question-heading">Which country?</h1>
+
+    <div class="flag-card">
+      <img
+        id="flag-img"
+        src="${flagUrl(country.code)}"
+        alt="Flag of an unknown European country — try to guess which one"
+        width="320"
+        height="170"
+        onerror="handleImgError(this)"
+      />
+    </div>
+
+    ${hintHtml}
+    ${feedbackHtml}
+
+    <div class="input-row">
+      <input
+        class="flag-input"
+        id="answer-input"
+        type="text"
+        placeholder="Type country name…"
+        value="${escapeAttr(state.inputVal)}"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        aria-label="Your answer"
+        ${answered ? "disabled" : ""}
+      />
+      <button
+        class="btn btn-primary"
+        onclick="submitAnswer()"
+        aria-label="Submit answer"
+        ${answered ? "disabled" : ""}
+      >Answer</button>
+    </div>
+
+    <div class="action-row">
+      <button
+        class="btn btn-sm"
+        onclick="fetchHint()"
+        aria-label="${escapeAttr(hintLabel)}"
+        ${canHint ? "" : "disabled"}
+      >${hintLabel}</button>
+      ${secondaryActions}
+    </div>
+  `;
+
+  // After render, wire up keyboard behaviour on the input
+  if (!answered) {
+    const input = document.getElementById("answer-input");
+    if (input) {
+      input.focus();
+      // Place cursor at end of any pre-filled text
+      input.setSelectionRange(input.value.length, input.value.length);
+      input.addEventListener("keydown", e => { if (e.key === "Enter") submitAnswer(); });
+      // Keep state in sync so text survives re-renders
+      input.addEventListener("input", e => { state.inputVal = e.target.value; });
+    }
+  }
+}
+
+/* ── Boot ────────────────────────────────────────────────────── */
+render();
+</script>
+</body>
+</html>
