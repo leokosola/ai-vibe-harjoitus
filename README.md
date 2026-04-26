@@ -2,4 +2,4 @@ Tunnista valtio mille lippu kuuluu ja kirjoita se tekstikenttään. Voit myös o
 
 Arvuuteltavat maat ovat tällä hetkellä kaikki Euroopan maita. Tulevaisuudessa peliä voisi laajentaa kaikkiin maailman maihin.
 
-Pelaa: leokosola.github.io/ai-vibe-harjoitus
+Pelaa: [leokosola.github.io/ai-vibe-harjoitus](https://leokosola.github.io/ai-vibe-harjoitus/)
